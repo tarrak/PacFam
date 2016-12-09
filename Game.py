@@ -85,7 +85,6 @@ class Inky(Ghost):
 
     def hit_wall(self):
         x,y = self.position[0] // 32, self.position[1] // 32
-        print("current location: " + "(" + str(x) + "," + str(y) + ")")
         possible_directions = [(x+1,y),(x-1,y),(x,y+1),(x,y-1)]
         possible_moves = []
         for move in possible_directions:
@@ -94,9 +93,7 @@ class Inky(Ghost):
                 if tuple(map(sum,zip((x,y),(0 - self.direction[0]/7,0 - self.direction[1]/7)))) == (move[0],move[1]):
                     pass
                 else:
-                    print("possible future location: " + "(" + str(move[0]) + "," + str(move[1]) + ")")
                     possible_moves.append(((move[0] - x) * SPEED,(move[1] - y) * SPEED))
-        print("possible moves: " + str(possible_moves))
         try:
             self.direction = random.choice(possible_moves)
         except IndexError:
@@ -129,7 +126,6 @@ class Blinky(Ghost):
             if self.last_visited == (x,y):
                 return
             self.last_visited = (x,y)
-            print("current location: " + "(" + str(x) + "," + str(y) + ")")
             possible_directions = [(x+1,y),(x-1,y),(x,y+1),(x,y-1)]
             possible_moves = []
             for move in possible_directions:
@@ -138,9 +134,7 @@ class Blinky(Ghost):
                     if tuple(map(sum,zip((x,y),(0 - self.direction[0]/7,0 - self.direction[1]/7)))) == (move[0],move[1]):
                         pass
                     else:
-                        print("possible future location: " + "(" + str(move[0]) + "," + str(move[1]) + ")")
                         possible_moves.append(((move[0] - x) * SPEED,(move[1] - y) * SPEED))
-            print("possible moves: " + str(possible_moves))
             self.direction = random.choice(possible_moves)
         except IndexError:
             self.last_visited = None
@@ -162,7 +156,6 @@ class Pinky(Ghost):
             if self.last_visited == (x,y):
                 return
             self.last_visited = (x,y)
-            print("current location: " + "(" + str(x) + "," + str(y) + ")")
             possible_directions = [(x+1,y),(x-1,y),(x,y+1),(x,y-1)]
             possible_moves = []
             for move in possible_directions:
@@ -171,9 +164,7 @@ class Pinky(Ghost):
                     if tuple(map(sum,zip((x,y),(0 - self.direction[0]/7,0 - self.direction[1]/7)))) == (move[0],move[1]):
                         pass
                     else:
-                        print("possible future location: " + "(" + str(move[0]) + "," + str(move[1]) + ")")
                         possible_moves.append(((move[0] - x) * SPEED,(move[1] - y) * SPEED))
-            print("possible moves: " + str(possible_moves))
             self.direction = self.compare_with_pac(possible_moves,(x,y))
         except IndexError:
             self.last_visited = None
@@ -345,6 +336,10 @@ class LogicLayer(Layer):
         self.chara_layer = chara_layer
         self.score = 0
         self.lives = 3
+        self.POWstartTime = 0
+        self.POWendTime = 0
+        self.time = 0
+        self.fixWall = False
 
         self.score_label = cocos.text.Label('Score: 0' ,
                 font_size=30,
@@ -376,7 +371,9 @@ class LogicLayer(Layer):
         self.pellet_manager.clear()
         self.ghost_manager.clear()
         self.POWpellet_manager.clear()
-
+        self.time += dt
+        if self.fixWall == False:
+            MAP_TEMPLATE[8][9] = 1
         #here goes wall collision checking
         for wall in self.walls:
             wall.cshape.center = wall.position
@@ -401,7 +398,7 @@ class LogicLayer(Layer):
             self.map_layer.remove(pellet)
             self.pellets.remove(pellet)
             if all(pellet.parent is None for pellet in self.pellets):
-                director.push(victory_scene())
+                director.replace(victory_scene())
 
         #going to hit up power pellets here soonish
         for POWpellet in self.POWpellets:
@@ -418,6 +415,8 @@ class LogicLayer(Layer):
 
             self.map_layer.remove(POWpellet)
             self.POWpellets.remove(POWpellet)
+            self.POWstartTime = self.time
+            self.POWendTime = self.time + 10
 
         #ghooOOOOOOOOOSSSTTTTTTSSS BOO
         for ghost in self.ghosts:
@@ -431,10 +430,18 @@ class LogicLayer(Layer):
             else:
                 self.lives -= 1
                 self.update_text()
+                for ghost in self.ghosts:
+                    ghost.respawn()
                 if self.lives == 0:
                 #put a game over screen here, with a restart button.
-                    director.push(gameover_scene())
+                    director.replace(gameover_scene())
                 self.pacman.respawn()
+
+        #handles end of power pellet timing
+        if self.POWendTime < self.time:
+            for ghost in self.ghosts:
+                ghost.become_brave()
+
 
     def update_text(self):
         self.score_label.element.text = "Score: " + str(self.score)

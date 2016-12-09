@@ -21,7 +21,7 @@ class PacmanMenu(Menu):
         self.create_menu(menu_item)
 
     def play_game(self):
-        director.push(game_scene())
+        director.replace(game_scene())
 
     def quit_game(self):
         sys.exit()
@@ -35,5 +35,4 @@ class PacmanLogo(Layer):
 		self.add(self.logo)
 
 director.init(width=608, height=800)
-
 director.run(Scene(PacmanMenu(), PacmanLogo()))

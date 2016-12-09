@@ -22,7 +22,7 @@ class Victory(Menu):
 
     def play_game(self):
         from Game import game_scene
-        director.push(game_scene())
+        director.replace(game_scene())
 
     def quit_game(self):
         sys.exit()
