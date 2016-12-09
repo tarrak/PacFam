@@ -15,8 +15,6 @@ from pyglet import font
 class PacmanMenu(Menu):
     def __init__(self):
         super().__init__()
-        #self.menu_halign = CENTER
-        #self.menu_valign = CENTER
 
         menu_item = [(MenuItem("Play!", self.play_game)), (MenuItem(" ", None)), (MenuItem("Quit!", self.quit_game))]
 

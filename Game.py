@@ -10,6 +10,8 @@ from cocos.layer import Layer
 from cocos.director import director
 from cocos.sprite import Sprite
 import cocos.collision_model as cm
+from Victory import victory_scene
+from GameOver import gameover_scene
 
 SPEED = 7
 
@@ -398,6 +400,8 @@ class LogicLayer(Layer):
             self.update_text()
             self.map_layer.remove(pellet)
             self.pellets.remove(pellet)
+            if all(pellet.parent is None for pellet in self.pellets):
+                director.push(victory_scene())
 
         #going to hit up power pellets here soonish
         for POWpellet in self.POWpellets:
@@ -429,7 +433,7 @@ class LogicLayer(Layer):
                 self.update_text()
                 if self.lives == 0:
                 #put a game over screen here, with a restart button.
-                    sys.exit(0)
+                    director.push(gameover_scene())
                 self.pacman.respawn()
 
     def update_text(self):
